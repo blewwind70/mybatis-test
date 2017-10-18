@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.simple.employee.dao.EmployeeDao">
+	
+	<sql id="empSelect">
+		select 
+			employee_id							id
+			,first_name							firstName
+			,last_name							lastName
+			,email
+			,phone_number						phoneNumber
+			,hire_date								hireDate
+			,job_id									jobId
+			,salary
+			,commission_pct						commissionPct
+			,manager_id							"manager.id"
+			,department_id						"departmnet.id"
+		from employees
+	</sql>
+
+	<select id="getEmployees" parameterType="Criteria" resultType="Emp">
+		<include refid="empSelect"/>
+		<where>
+			<if test="opt != null and keyword != null">
+				<choose>
+					<when test="opt == 'name'">				
+						and trim(first_name || ' ' || last_name) like '%' || trim(#{keyword}) || '%'
+					</when>
+					<when test="opt == 'phone'">
+						and phone_number like '%' || #{keyword} || '%'
+					</when>
+				</choose>
+				<if test="depts != null">
+					and department_id in
+					<foreach item="forDept" index="index" collection="depts" separator="," open="(" close=")">
+						#{forDept}
+					</foreach>
+				</if>
+				<if test="jobs != null">
+					and job_id in
+					<foreach item="forJob" index="index" collection="jobs" separator="," open="(" close=")">
+						#{forJob}
+					</foreach>
+				</if>
+				<if test="minSalary != null">
+					and salary &gt;= #{minSalary}
+				</if>
+				<if test="maxSalary != null">
+					and salary &lt;= #{maxSalary}
+				</if>
+				<if test="beginDate != null">
+					and hire_date &gt;= to_date(#{beginDate})
+				</if>
+				<if test="endDate != null">
+					and hire_date &lt;= to_date(#{endDate})
+				</if>
+			</if>
+		</where>
+	</select>
+</mapper>
